@@ -15,13 +15,13 @@ ISR(TIMER0_OVF_vect)
 void timer0_init()
 {
  // set up timer with prescaler = 256
-  TCCR0 |= (1 << CS02);
+  TCCR0B |= (1 << CS02);
 
  // initialize counter
   TCNT0 = 0;
 
  // enable overflow interrupt
-  TIMSK |= (1 << TOIE0);
+  TIMSK0 |= (1 << TOIE0);
 
  // enable global interrupts
   sei();
