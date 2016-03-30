@@ -6,16 +6,21 @@
 void spi_init_master() {
   //enable output on pin10, 11,13 (SS, MOSI, SCK)
   DDRB = (1<<PB2)|(1<<PB3)|(1<<PB5);//pin 10 (PB2 is output
-  //enable spi, set Master, MSB first, fspi = fclk/16
-  SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
+  //enable spi, set Master, MSB first, fspi = fclk/64
+  //sample trailing (rising) edge
+  //MSB first (default)
+  SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR1)|(1<<CPOL)|(1<<CPHA);
 }
-void transmit(char byteWrite, char *byteRead) {
+unsigned char transceive(unsigned char byteWrite){
   PORTB &= ~(1<<PB2);
   SPDR = byteWrite;
   while(!(SPSR & (1<<SPIF))); //poll till transmission complete
   _delay_us(100);
-  *byteRead = SPDR;//read value from slave
+  SPDR = 0xFF;//send arbitrary value just to read
+  while(!(SPSR & (1<<SPIF))); //poll till transmission complete
+  _delay_us(100);
   PORTB |= (1<<PB2);
+  return SPDR;
 
 }
 
@@ -23,26 +28,23 @@ int main() {
   uart_init();
   spi_init_master();
   printf("hello\n");
-  char byteWrite = 'm';
-  char byteRead = 'r';
-  char motion, deltaX, deltaY;
-  char id, idin;
-  transmit(0x00, &id);//send address for motion
-  _delay_us(100);
-  transmit(0x3f, &idin);//send address for motion
-  _delay_us(100);
-  printf("id: %u, in_id: %u\n", id, idin);
+  uint8_t motion;
+  int8_t deltaX, deltaY;
+  uint8_t id, id_inv;
+  id = transceive(0x00);//send address for inverse_id
+  //id = transceive(0xFF);
+  id_inv = transceive(0x3F); //address for inverse_id
+  //id_inv = transceive(0xFF);
+  printf("id: %hu, in_id: %hu\n", id, id_inv);
   while(1) {
-/*
-    transmit(0x02, &motion);//send address for motion
-    _delay_us(100);
-    transmit(0x03, &deltaX);//send address for motion
-    _delay_us(100);
-    transmit(0x04, &deltaY);//send address for motion
-    _delay_us(100);
-    printf("motion: %u, deltaX: %d, deltaY: %d\n", byteRead>>7, deltaX, deltaY); 
-    _delay_ms(100);
-*/
+
+    motion = transceive(0x02);//send address for motion
+    deltaX = transceive(0x03);//send address for motion
+    deltaY = transceive(0x04);//send address for motion
+    printf("motion: %u, deltaX: %d, deltaY: %d\n", motion>>7, deltaX, deltaY); 
+    _delay_ms(200);
+
+
   } 
 
 }

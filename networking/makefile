@@ -1,6 +1,6 @@
 name = output
 device = /dev/cu.usbmodem1421
-src = spi_master.c
+src = spi_master_opticalflow.c
 flags = -std=c11 -Os
 baud = 9600
 
