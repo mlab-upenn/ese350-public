@@ -10,10 +10,12 @@ void spi_init_master() {
   SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
 }
 void transmit(char byteWrite, char *byteRead) {
+  PORTB &= ~(1<<PB2);
   SPDR = byteWrite;
   while(!(SPSR & (1<<SPIF))); //poll till transmission complete
   _delay_us(100);
   *byteRead = SPDR;//read value from slave
+  PORTB |= (1<<PB2);
 
 }
 
@@ -23,12 +25,24 @@ int main() {
   printf("hello\n");
   char byteWrite = 'm';
   char byteRead = 'r';
+  char motion, deltaX, deltaY;
+  char id, idin;
+  transmit(0x00, &id);//send address for motion
+  _delay_us(100);
+  transmit(0x3f, &idin);//send address for motion
+  _delay_us(100);
+  printf("id: %u, in_id: %u\n", id, idin);
   while(1) {
-    PORTB &= ~(1<<PB2);
-    transmit(0x03, &byteRead);//send address for deltaX
-    PORTB |= (1<<PB2);
-    printf("%d\n", byteRead); 
+/*
+    transmit(0x02, &motion);//send address for motion
+    _delay_us(100);
+    transmit(0x03, &deltaX);//send address for motion
+    _delay_us(100);
+    transmit(0x04, &deltaY);//send address for motion
+    _delay_us(100);
+    printf("motion: %u, deltaX: %d, deltaY: %d\n", byteRead>>7, deltaX, deltaY); 
     _delay_ms(100);
+*/
   } 
 
 }

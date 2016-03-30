@@ -1,5 +1,8 @@
 #include <avr/io.h>
 #include <uart.h>
+#include <util/delay.h>
+
+uint8_t i = 65;
 
 void spi_init_slave() {
   //enable output on MISO
@@ -8,28 +11,24 @@ void spi_init_slave() {
   SPCR = (1<<SPE);
 
 }
-void read(char *byteRead) {
-  while(!(SPSR & (1<<SPIF)));//poll till data is ready
-  *byteRead = SPDR;
-}
 
-void write(char byteWrite) {
-  SPDR = byteWrite;
+unsigned char transceive(unsigned char byteSend) {
+  SPDR = byteSend;
+  while(!(SPSR & (1<<SPIF)));//poll till data is ready
+  return SPDR;
 }
-  
 
 
 int main() {
   uart_init();
   spi_init_slave();
-  char byteWrite = 's';
   char byteRead;
+  SPDR = i;
+  uint8_t i = 0;
   while(1) {
-    while(PORTB & (1<<PB2));//poll till is ^SS is low
-    read(&byteRead);
-    while(!(PORTB & (1<<PB2)))//poll till ^SS is hi
-    write(byteWrite);
-    printf("%c\n", byteRead); 
+    byteRead = transceive(i);
+    printf("%hu\n", byteRead); 
+    i = (i+1)%10;
   } 
 
 }
