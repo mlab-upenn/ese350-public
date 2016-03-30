@@ -1,6 +1,6 @@
 name = output
-device = /dev/cu.usbmodem1421
-src = spi_master_opticalflow.c
+device = /dev/cu.usbmodem1411
+src = serial.c
 flags = -std=c11 -Os
 baud = 9600
 
@@ -25,8 +25,7 @@ list: $(src)
 	rm $(name).elf
 
 program: build
-	avrdude -F -V -c arduino -p ATMEGA328P -P $(device) -b 115200 \
-    -U flash:w:$(name).ihex
+	avrdude -F -V -c arduino -p ATMEGA328P -P $(device) -b 115200 -U flash:w:$(name).ihex
 
 clean:
 	rm -f $(name).ihex $(name).lst
