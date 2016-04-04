@@ -9,7 +9,7 @@ void spi_init_master() {
   SPCR = (1<<SPE)|(1<<MSTR)|(0<<SPR1)|(1<<SPR0);
 }
 
-unsigned char transceive(unsigned char byteSend) {
+unsigned char master_transceive(unsigned char byteSend) {
   PORTB &= ~(1<<PB2);
   SPDR = byteSend;
   while(!(SPSR & (1<<SPIF)));//poll till data is ready
@@ -21,16 +21,16 @@ unsigned char transceive(unsigned char byteSend) {
 int main() {
   uart_init();
   spi_init_master();
+  //poll to sync
+  while(master_transceive(0xFF) != 0xFF) {
+    printf("master is waiting");
+  }
+  uint8_t i = 0;
   uint8_t byteRead;
-  printf("hello\n");
-  uint8_t i = 11;
   while(1) {
-    byteRead = transceive(i);
-    printf("%hu\n", byteRead); 
-    i++;
-    if (i > 20) {
-      i = 11;
-    }
+    byteRead = master_transceive(i);
+    printf("sent: %hu, read:%hu\n", i, byteRead); 
+    i = byteRead+1;
     _delay_ms(500);
   } 
 

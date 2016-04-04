@@ -1,6 +1,6 @@
 name = output
 device = /dev/cu.usbmodem1421
-src = serial.c
+src = spi_slave.c
 flags = -std=c11 -Os
 baud = 9600
 

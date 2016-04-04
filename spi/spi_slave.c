@@ -2,7 +2,6 @@
 #include <uart.h>
 #include <util/delay.h>
 
-uint8_t i = 65;
 
 void spi_init_slave() {
   //enable output on MISO
@@ -14,7 +13,8 @@ void spi_init_slave() {
 
 unsigned char transceive(unsigned char byteSend) {
   SPDR = byteSend;
-  while(!(SPSR & (1<<SPIF)));//poll till data is ready
+//poll till data is ready
+  while(!(SPSR & (1<<SPIF)));  
   return SPDR;
 }
 
@@ -22,14 +22,18 @@ unsigned char transceive(unsigned char byteSend) {
 int main() {
   uart_init();
   spi_init_slave();
-  char byteRead;
-  SPDR = i;
-  uint8_t i = 0;
+  uint8_t sync = 255;
+//poll to sync
+  while(transceive(0x00) != 0xFF) {
+    printf("slave is waiting\n");
+  }
+  transceive(0xFF);
+  uint8_t byteRead;
+  uint8_t i = 1;
   while(1) {
     byteRead = transceive(i);
-    printf("%hu\n", byteRead); 
-    i = (i+1)%10;
+    printf("sent: %hu, read: %hu\n",i, byteRead); 
+    i = byteRead+3;
   } 
-
 }
   
